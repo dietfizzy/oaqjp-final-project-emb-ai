@@ -33,9 +33,9 @@ def emotion_detector_route():
     # Perform emotion detection
     response = emotion_detector(text_to_analyze)
     
-    # Check if response contains an error
-    if 'error' in response:
-        return f"Error: {response['error']}"
+    # Check if dominant_emotion is None (error handling for blank entries)
+    if response['dominant_emotion'] is None:
+        return "Invalid text! Please try again!"
     
     # Extract emotion scores
     anger = response['anger']
