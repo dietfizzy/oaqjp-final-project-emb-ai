@@ -123,4 +123,3 @@ The application includes comprehensive error handling for:
 ## License
 
 This project is part of an IBM course assignment.
-
