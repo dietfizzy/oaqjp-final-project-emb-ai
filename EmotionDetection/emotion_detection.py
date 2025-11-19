@@ -1,13 +1,11 @@
 """
-Emotion detection module using Watson NLP library.
-This module handles the core emotion detection functionality.
+Emotion detection function using Watson NLP library.
 """
 
 import requests
 import json
-from typing import Dict, Any
 
-def emotion_detector(text_to_analyze: str) -> Dict[str, Any]:
+def emotion_detector(text_to_analyze):
     """
     Analyzes the emotion in the given text using Watson NLP library.
     
@@ -15,32 +13,14 @@ def emotion_detector(text_to_analyze: str) -> Dict[str, Any]:
         text_to_analyze (str): The text to analyze for emotions.
     
     Returns:
-        dict: A dictionary containing emotion scores and dominant emotion.
-              Format: {
-                  'anger': float,
-                  'disgust': float,
-                  'fear': float,
-                  'joy': float,
-                  'sadness': float,
-                  'dominant_emotion': str
-              }
-    
-    Raises:
-        Exception: If the API call fails or returns an error.
+        dict: Formatted dictionary with emotion scores and dominant emotion.
     """
-    if not text_to_analyze or not text_to_analyze.strip():
-        return {
-            'error': 'Invalid text! Please try again.'
-        }
-    
-    # Watson NLP API endpoint (this would be configured in IBM Cloud)
-    # In the IBM IDE, this would be the actual Watson NLP service URL
-    url = 'https://sn-watson-emotion.labs.skills-network.net/v1/watson.runtime.nlp.v1/NlpService/EmotionPredict'
+    # Watson NLP API endpoint
+    url = 'https://sn-watson-emotion.labs.skills.network/v1/watson.runtime.nlp.v1/NlpService/EmotionPredict'
     
     # Headers for the API request
     headers = {
-        "grpc-metadata-mm-model-id": "emotion_aggregated-workflow_lang_en_stock",
-        "Content-Type": "application/json"
+        "grpc-metadata-mm-model-id": "emotion_aggregated-workflow_lang_en_stock"
     }
     
     # Input data for the API
@@ -50,74 +30,37 @@ def emotion_detector(text_to_analyze: str) -> Dict[str, Any]:
         }
     }
     
-    try:
-        # Make the API request
-        response = requests.post(url, json=input_json, headers=headers, timeout=10)
-        
-        # Check if request was successful
-        if response.status_code == 200:
-            # Parse the response
-            response_data = response.json()
-            
-            # Extract emotion predictions
-            emotions = response_data.get('emotionPredictions', [{}])[0].get('emotion', {})
-            
-            # Get emotion scores
-            anger = emotions.get('anger', 0)
-            disgust = emotions.get('disgust', 0)
-            fear = emotions.get('fear', 0)
-            joy = emotions.get('joy', 0)
-            sadness = emotions.get('sadness', 0)
-            
-            # Find dominant emotion
-            emotion_scores = {
-                'anger': anger,
-                'disgust': disgust,
-                'fear': fear,
-                'joy': joy,
-                'sadness': sadness
-            }
-            
-            dominant_emotion = max(emotion_scores, key=emotion_scores.get)
-            
-            return {
-                'anger': anger,
-                'disgust': disgust,
-                'fear': fear,
-                'joy': joy,
-                'sadness': sadness,
-                'dominant_emotion': dominant_emotion,
-                'emotions': emotion_scores
-            }
-        
-        else:
-            # Handle API errors
-            return {
-                'error': f'API request failed with status code {response.status_code}'
-            }
+    # Make the API request
+    response = requests.post(url, json=input_json, headers=headers)
     
-    except requests.exceptions.Timeout:
-        return {
-            'error': 'Request timeout. Please try again.'
-        }
+    # Convert the response text into a dictionary
+    formatted_response = json.loads(response.text)
     
-    except requests.exceptions.ConnectionError:
-        return {
-            'error': 'Connection error. Please check your network connection.'
-        }
+    # Extract the required set of emotions
+    emotions = formatted_response['emotionPredictions'][0]['emotion']
+    anger_score = emotions['anger']
+    disgust_score = emotions['disgust']
+    fear_score = emotions['fear']
+    joy_score = emotions['joy']
+    sadness_score = emotions['sadness']
     
-    except requests.exceptions.RequestException as e:
-        return {
-            'error': f'Request failed: {str(e)}'
-        }
+    # Find the dominant emotion (emotion with the highest score)
+    emotion_scores = {
+        'anger': anger_score,
+        'disgust': disgust_score,
+        'fear': fear_score,
+        'joy': joy_score,
+        'sadness': sadness_score
+    }
+    dominant_emotion = max(emotion_scores, key=emotion_scores.get)
     
-    except (KeyError, IndexError, json.JSONDecodeError) as e:
-        return {
-            'error': f'Error parsing response: {str(e)}'
-        }
-    
-    except Exception as e:
-        return {
-            'error': f'Unexpected error: {str(e)}'
-        }
+    # Return the formatted output
+    return {
+        'anger': anger_score,
+        'disgust': disgust_score,
+        'fear': fear_score,
+        'joy': joy_score,
+        'sadness': sadness_score,
+        'dominant_emotion': dominant_emotion
+    }
 
